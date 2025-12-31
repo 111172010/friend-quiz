@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【極秘】無意義呻吟群組友情大測驗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        body {
+            font-family: 'Noto+Sans+TC', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .quiz-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .option-btn {
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .option-btn:hover:not(:disabled) {
+            background-color: #f3f4f6;
+            transform: translateX(5px);
+        }
+        .correct {
+            background-color: #d1fae5 !important;
+            border-color: #10b981 !important;
+            color: #065f46 !important;
+        }
+        .wrong {
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #991b1b !important;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <div id="start-screen" class="quiz-container text-center py-12">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">無意義呻吟群組<br>友情大測驗 30 題版</h1>
+        <p class="text-gray-600 mb-8">誰才是呻吟之王？誰又是最雷西斯特的人？<br>準備好接受 30 題的黑歷史洗禮了嗎？</p>
+        <button onclick="startQuiz()" class="bg-indigo-600 text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-indigo-700 transition">開始挑戰</button>
+    </div>
+
+    <div id="quiz-screen" class="quiz-container hidden">
+        <div class="flex justify-between items-center mb-6">
+            <span id="progress-text" class="text-sm font-semibold text-indigo-600 uppercase tracking-wide">第 1 / 30 題</span>
+            <span id="score-text" class="text-sm font-semibold text-gray-500">得分: 0</span>
+        </div>
+        
+        <h2 id="question-text" class="text-xl font-bold text-gray-800 mb-6 leading-relaxed">題目載入中...</h2>
+        
+        <div id="options-container" class="space-y-3">
+            <!-- Options will be injected here -->
+        </div>
+
+        <div id="feedback-container" class="mt-6 p-4 rounded-lg hidden border-l-4">
+            <p id="feedback-title" class="font-bold mb-1"></p>
+            <p id="feedback-rationale" class="text-sm"></p>
+            <button onclick="nextQuestion()" id="next-btn" class="mt-4 w-full bg-gray-800 text-white py-2 rounded-lg font-bold hover:bg-black transition">下一題</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="quiz-container hidden text-center py-12">
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">測驗完成！</h2>
+        <div class="text-6xl font-black text-indigo-600 my-8" id="final-score">0 / 30</div>
+        <p id="result-message" class="text-gray-600 mb-8 px-4 font-medium"></p>
+        <button onclick="location.reload()" class="bg-indigo-600 text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-indigo-700 transition">重新挑戰</button>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+              "question": "哪位成員因為媽媽想住西門町，而放棄了原本的住宿選擇，被封為「大奶媽寶」？",
+              "options": [
+                {"text": "Lorde妹一號", "rationale": "他在對話中提到媽媽的意見左右了他的飯店選擇，因此獲得此封號。", "isCorrect": true},
+                {"text": "填腹珍", "rationale": "她在對話中主要被關心男友出差的事，而非飯店決策。", "isCorrect": false},
+                {"text": "吉", "rationale": "吉是發起討論的人，而非被稱為媽寶的對象。", "isCorrect": false},
+                {"text": "Fatty Perry", "rationale": "他是給出這個封號的人，而非受封者。", "isCorrect": false}
+              ]
+            },
+            {
+              "question": "吉 (Ji) 回到台南當天發生的「熱烈歡迎」自然現象是什麼？",
+              "options": [
+                {"text": "地震", "rationale": "吉在 7/28 提到台南用地震迎接他回去。", "isCorrect": true},
+                {"text": "豪雨", "rationale": "雖然台南常有豪雨，但對話中強調的是地震。", "isCorrect": false},
+                {"text": "日食", "rationale": "這太罕見了，不是當時發生的事。", "isCorrect": false},
+                {"text": "颱風", "rationale": "當時並無颱風紀錄提及。", "isCorrect": false}
+              ]
+            },
+            {
+              "question": "Fatty Perry 在 Twitter (X) 上發生的「Filter Gate」事件具體過程為何？",
+              "options": [
+                {"text": "想在鎖帳轉推嗆人，結果直接回覆到對方推文下", "rationale": "他坦承原本想私下酸，結果不小心公開回覆「濾鏡很重」。", "isCorrect": true},
+                {"text": "不小心按讚了前男友的婚禮照片", "rationale": "雖然尷尬，但不是這次提到的「濾鏡」事件。", "isCorrect": false},
+                {"text": "把群組醜照發到了公開帳號", "rationale": "這是大家擔心的事，但不是他自首的事。", "isCorrect": false},
+                {"text": "忘記切換帳號結果用公司名義發廢文", "rationale": "他的失誤是關於回覆對象的錯誤。", "isCorrect": false}
+              ]
+            },
+            {
+              "question": "填腹珍的男友「姜」去美國出差的地點在哪裡？",
+              "options": [
+                {"text": "德州達拉斯 (Dallas)", "rationale": "填腹珍提到去德州達拉斯，且 Fatty Perry 還嘲諷那裡很無聊。", "isCorrect": true},
+                {"text": "加州洛杉磯", "rationale": "雖然是熱門地點，但不是姜去的地方。", "isCorrect": false},
+                {"text": "紐約曼哈頓", "rationale": "姜並非去紐約。", "isCorrect": false},
+                {"text": "華盛頓特區", "rationale": "正確地點是德州的達拉斯。", "isCorrect": false}
+              ]
+            },
+            {
+              "question": "吉 (Ji) 打算在新生座談會被點名時喊出的「品味詞」是？",
+              "options": [
+                {"text": "Renaissance", "rationale": "吉提到每次點到他就想說 renaissance（文藝復興）。", "isCorrect": true},
+                {"text": "Slay", "rationale": "雖然他常說 slay，但座談會的目標詞是專輯名。", "isCorrect": false},
+                {"text": "Chromatica", "rationale": "那是 Gaga 的專輯，吉當時選的是 Beyoncé 的。", "isCorrect": false},
+                {"text": "Hustler", "rationale": "這不是他提到的詞彙。", "isCorrect": false}
+              ]
+            },
+            {
+              "question": "誰在公會打龍時「撿尾刀」，導致吉發出無奈的標記？",
+              "options": [
+                {"text": "超鬼死女（鳳梨）", "rationale": "超鬼死女大方承認是他撿的尾刀，並回覆「啾咪」。", "isCorrect": true},
+                {"text": "Fatty Perry", "rationale": "他當時在旁邊幫腔，而非撿尾刀的人。", "isCorrect": false},
+                {"text": "Lorde妹一號", "rationale": "他當時主要在討論飯店，沒參與打龍。", "isCorrect": false},
+                {"text": "填腹珍", "rationale": "她通常不參與這種紛爭。", "isCorrect": false}
+              ]
+            },
+            {
+              "question": "Lorde妹一號在飯店花了 30 分鐘拍什麼照片，結果被媽媽催促洗澡？",
+              "options": [
+                {"text": "聖光照", "rationale": "他發現飯店有聖光，執著地拍了半小時。", "isCorrect": true},
+                {"text": "浴缸美腿照", "rationale": "雖然很美，但對話紀錄記載的是「聖光」。", "isCorrect": false},
+                {"text": "早餐Buffet照", "rationale": "這是凌晨發生的事，不是早餐時間。", "isCorrect": false},
+                {"text": "電梯穿搭照", "rationale": "他當時在房內拍聖光。", "isCorrect": false}
+              ]
+            },
+            {
+              "question": "吉 (Ji) 把什麼東西傳給媽媽後，感嘆「好像又回到出櫃的起點」？",
+              "options": [
+                {"text": "重口味怪貼圖", "rationale": "他把平常用的一些怪貼圖傳給媽媽，媽媽回覆「愛是盲目的」。", "isCorrect": true},
+                {"text": "與男生的親密合照", "rationale": "起因是貼圖引發的。", "isCorrect": false},
+                {"text": "碧昂絲的演唱會影片", "rationale": "這雖也很 gay，但不是這次的起點。", "isCorrect": false},
+                {"text": "自己的變裝造型", "rationale": "起因是 LINE 貼圖。", "isCorrect": false}
+              ]
+            },
+            {
+              "question": "哪位明星在群組討論中被迷因化為「會開車碾過同性戀」的人？",
+              "options": [
+                {"text": "Millie Bobby Brown", "rationale": "這是經典的網路反諷迷因，在對話末尾被提及。", "isCorrect": true},
+                {"text": "Taylor Swift", "rationale": "泰勒絲在群組中通常是被稱讚的對象。", "isCorrect": false},
+                {"text": "Ariana Grande", "rationale": "碾人迷因不屬於她。", "isCorrect": false},
+                {"text": "Lorde", "rationale": "她是 Lorde 妹的精神領袖。", "isCorrect": false}
+              ]
+            },
+            {
+              "question": "Fatty Perry 曾開玩笑說，如果他發照片在群組，吉會做什麼事？",
+              "options": [
+                {"text": "拿去報警或外流", "rationale": "Fatty Perry 擔心自己的照片被吉拿去做壞事。", "isCorrect": true},
+                {"text": "當成手機桌布", "rationale": "這太溫馨了。", "isCorrect": false},
+                {"text": "幫他修圖", "rationale": "不是對話中的威脅。", "isCorrect": false},
+                {"text": "直接封鎖他", "rationale": "照片是用來威脅而非封鎖。", "isCorrect": false}
+              ]
+            },
+            {
+                "question": "群組名稱中提到的「雷西斯特」是什麼意思？",
+                "options": [
+                  {"text": "種族歧視者 (Racist) 的音譯", "rationale": "這是群組成員用來互嗆或自嘲的幽默方式。", "isCorrect": true},
+                  {"text": "一種特殊的抗藥性", "rationale": "發音像，但意義不同。", "isCorrect": false},
+                  {"text": "雷射除毛的專家", "rationale": "完全誤解。", "isCorrect": false},
+                  {"text": "一種電子音樂風格", "rationale": "無關。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "2022/07/31 晚上，超鬼死女提到的「我習慣了」是在回應什麼指控？",
+                "options": [
+                  {"text": "被吉性騷擾", "rationale": "吉開玩笑說超鬼死女在性騷擾他，對方幽默回應。", "isCorrect": true},
+                  {"text": "被大家排擠", "rationale": "當時是關於性騷擾話題。", "isCorrect": false},
+                  {"text": "玩遊戲又輸了", "rationale": "非當時話題。", "isCorrect": false},
+                  {"text": "被嗆很窮", "rationale": "話題集中在吉的指控上。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "填腹珍曾抱怨她的世界時鐘找不到「德州」，建議她找哪個城市？",
+                "options": [
+                  {"text": "達拉斯 (Dallas)", "rationale": "姜出差的具體城市，位於德州。", "isCorrect": true},
+                  {"text": "休士頓", "rationale": "不是姜去的地方。", "isCorrect": false},
+                  {"text": "奧斯汀", "rationale": "不是姜去的地方。", "isCorrect": false},
+                  {"text": "聖安東尼奧", "rationale": "無關。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "吉 (Ji) 曾開玩笑說要在群組發什麼照片，導致 Fatty Perry 說「好可怕」？",
+                "options": [
+                  {"text": "裸照", "rationale": "吉在 07/28 凌晨開玩笑說要發裸照。", "isCorrect": true},
+                  {"text": "鬼片截圖", "rationale": "不符合吉的風格。", "isCorrect": false},
+                  {"text": "體重計的照片", "rationale": "雖然可怕但非正確答案。", "isCorrect": false},
+                  {"text": "自己的素顏照", "rationale": "非答案。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "當大家在討論飯店時，吉 (Ji) 提到「有一間我也很想住」，是哪一間？",
+                "options": [
+                  {"text": "時代寓所", "rationale": "吉在討論中明確提到了這間飯店。", "isCorrect": true},
+                  {"text": "W Hotel", "rationale": "非當時提到的飯店。", "isCorrect": false},
+                  {"text": "君悅飯店", "rationale": "非當時重點。", "isCorrect": false},
+                  {"text": "艾美酒店", "rationale": "吉當時點名的是時代寓所。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "Fatty Perry 覺得德州達拉斯這個地方怎麼樣？",
+                "options": [
+                  {"text": "超級無聊", "rationale": "他直言德州真的沒什麼好玩的。", "isCorrect": true},
+                  {"text": "購物天堂", "rationale": "他沒這麼說。", "isCorrect": false},
+                  {"text": "風景優美", "rationale": "非他的評價。", "isCorrect": false},
+                  {"text": "充滿文化氣息", "rationale": "評價負面。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "Lorde妹一號提到的「聖光」照片，背景是在哪裡？",
+                "options": [
+                  {"text": "飯店房間", "rationale": "在台北飯店住宿時發現的採光。", "isCorrect": true},
+                  {"text": "教堂", "rationale": "地點是飯店。", "isCorrect": false},
+                  {"text": "校園座談會", "rationale": "座談會沒聖光。", "isCorrect": false},
+                  {"text": "火車上", "rationale": "在飯店房內拍攝。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "吉 (Ji) 曾在哪個時間點突然發起「群組通話」，結果大家聊到凌晨兩點？",
+                "options": [
+                  {"text": "2022/07/27 接近午夜", "rationale": "群組創立首日就開啟了熱線模式。", "isCorrect": true},
+                  {"text": "2022/08/06 飯店當晚", "rationale": "那天在聊貼圖。", "isCorrect": false},
+                  {"text": "2022/07/31 玩遊戲時", "rationale": "那天是文字互嗆。", "isCorrect": false},
+                  {"text": "2025/12/31 跨年時", "rationale": "非紀錄記載時間。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "誰在對話中被標記為「奧塞有錢人」？",
+                "options": [
+                  {"text": "Fatty Perry", "rationale": "他在 2025 年的聊天顯示名中帶有此稱號。", "isCorrect": true},
+                  {"text": "吉", "rationale": "吉沒有這個稱號。", "isCorrect": false},
+                  {"text": "超鬼死女", "rationale": "他的稱號是張多愛系列。", "isCorrect": false},
+                  {"text": "蕭黃珊", "rationale": "他是翔平特助。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "填腹珍的男友姜出差的時間點大約是？",
+                "options": [
+                  {"text": "2022年8月中到10月中", "rationale": "08/19 出發，待兩個月。", "isCorrect": true},
+                  {"text": "2022年7月初", "rationale": "那時還在群組通話。", "isCorrect": false},
+                  {"text": "2023年整年", "rationale": "不對。", "isCorrect": false},
+                  {"text": "2022年聖誕節", "rationale": "暑假話題。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "吉 (Ji) 在 08/06 提到他傳給媽媽的貼圖「重口味」到什麼程度？",
+                "options": [
+                  {"text": "讓媽媽說出「愛是盲目的」", "rationale": "反映了媽媽的無奈包容。", "isCorrect": true},
+                  {"text": "媽媽直接封鎖了他", "rationale": "未到此地步。", "isCorrect": false},
+                  {"text": "媽媽回傳了更重口味的", "rationale": "並未發生。", "isCorrect": false},
+                  {"text": "媽媽打電話來痛罵", "rationale": "僅文字感嘆。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "蕭黃珊（2025年版本）提到的「地獄 gap year」懲罰內容包含什麼？",
+                "options": [
+                  {"text": "在公車上被日本 G 片汁男司機載走", "rationale": "測驗中生成的奇葩懲罰。", "isCorrect": true},
+                  {"text": "被關在德州達拉斯兩年", "rationale": "非答案。", "isCorrect": false},
+                  {"text": "被迫看一整年的 Lorde 演唱會", "rationale": "可能對某些人是獎勵。", "isCorrect": false},
+                  {"text": "不能使用 Beyoncé 貼圖", "rationale": "雖然殘忍但非答案。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "Fatty Perry 為什麼覺得自己「很難相處」？",
+                "options": [
+                  {"text": "因為他會在鎖帳嗆人濾鏡重", "rationale": "事件讓他開玩笑地反省。", "isCorrect": true},
+                  {"text": "因為他很有錢", "rationale": "有錢通常受歡迎。", "isCorrect": false},
+                  {"text": "因為他一直撿尾刀", "rationale": "那是超鬼死女。", "isCorrect": false},
+                  {"text": "因為他不喜歡 Beyoncé", "rationale": "他懂 Renaissance。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "超鬼死女在 2025 年的稱號中包含了哪些人物？",
+                "options": [
+                  {"text": "張多愛、徐巧芯、歧黑子", "rationale": "這是他顯示的超長括號稱號。", "isCorrect": true},
+                  {"text": "蔡英文、賴清德", "rationale": "非答案。", "isCorrect": false},
+                  {"text": "Lorde、Taylor Swift", "rationale": "非答案。", "isCorrect": false},
+                  {"text": "奧塞有錢人", "rationale": "那是 Fatty Perry。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "當 Lorde 妹一號在台北外宿時，最後因為媽媽改住哪裡？",
+                "options": [
+                  {"text": "西門町", "rationale": "最終決定地點。", "isCorrect": true},
+                  {"text": "北投", "rationale": "未提到。", "isCorrect": false},
+                  {"text": "淡水", "rationale": "未提到。", "isCorrect": false},
+                  {"text": "台中", "rationale": "地點就在台北。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "吉 (Ji) 提到「有一首真的是天籟」，指的是哪位藝人的歌？",
+                "options": [
+                  {"text": "Beyoncé (Renaissance 專輯)", "rationale": "當時正值該專輯發片。", "isCorrect": true},
+                  {"text": "Lorde", "rationale": "非當時焦點。", "isCorrect": false},
+                  {"text": "Lady Gaga", "rationale": "當時在瘋碧昂絲。", "isCorrect": false},
+                  {"text": "Taylor Swift", "rationale": "非當時話題。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "誰在群組裡被形容為「這個群組只會無意義的呻吟」？",
+                "options": [
+                  {"text": "全體成員", "rationale": "群組名稱的一部分。", "isCorrect": true},
+                  {"text": "只有吉", "rationale": "是形容整群人。", "isCorrect": false},
+                  {"text": "只有填腹珍", "rationale": "非唯一。", "isCorrect": false},
+                  {"text": "只有 Lorde 妹一號", "rationale": "非唯一。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "Fatty Perry 在 2022/07/31 說他「差點去留言說：不小心回原本的推」，原因是他？",
+                "options": [
+                  {"text": "太緊張結果又想圓謊", "rationale": "敘述那個尷尬瞬間。", "isCorrect": true},
+                  {"text": "想跟對方搭訕", "rationale": "非答案。", "isCorrect": false},
+                  {"text": "帳號被盜", "rationale": "未採用此藉口。", "isCorrect": false},
+                  {"text": "手機壞掉", "rationale": "手滑災難。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "群組中提到的「公會」是在玩哪一款遊戲？（根據內容推測）",
+                "options": [
+                  {"text": "某種有公會龍的手遊", "rationale": "提到「公會龍」、「撿尾刀」。", "isCorrect": true},
+                  {"text": "英雄聯盟 (LOL)", "rationale": "LOL 不稱公會。", "isCorrect": false},
+                  {"text": "傳說對決", "rationale": "不稱公會龍。", "isCorrect": false},
+                  {"text": "跑跑卡丁車", "rationale": "無龍。", "isCorrect": false}
+                ]
+            },
+            {
+                "question": "這個群組的精神領袖通常被認為是？",
+                "options": [
+                  {"text": "吉 (Ji)", "rationale": "創群者，話題核心。", "isCorrect": true},
+                  {"text": "填腹珍", "rationale": "情感支柱。", "isCorrect": false},
+                  {"text": "超鬼死女", "rationale": "雷西斯特補刀者。", "isCorrect": false},
+                  {"text": "Lorde妹一號", "rationale": "視覺總監。", "isCorrect": false}
+                ]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = quizData[currentQuestionIndex];
+            document.getElementById('question-text').innerText = question.question;
+            document.getElementById('progress-text').innerText = `第 ${currentQuestionIndex + 1} / ${quizData.length} 題`;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn w-full p-4 border-2 border-gray-200 rounded-xl font-medium text-gray-700 hover:border-indigo-400 focus:outline-none';
+                button.innerText = option.text;
+                button.onclick = () => selectOption(index);
+                optionsContainer.appendChild(button);
+            });
+
+            document.getElementById('feedback-container').classList.add('hidden');
+        }
+
+        function selectOption(index) {
+            const question = quizData[currentQuestionIndex];
+            const isCorrect = question.options[index].isCorrect;
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            buttons.forEach((btn, i) => {
+                btn.disabled = true;
+                if (question.options[i].isCorrect) {
+                    btn.classList.add('correct');
+                } else if (i === index && !isCorrect) {
+                    btn.classList.add('wrong');
+                }
+            });
+
+            if (isCorrect) score++;
+            document.getElementById('score-text').innerText = `得分: ${score}`;
+
+            const feedbackContainer = document.getElementById('feedback-container');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackRationale = document.getElementById('feedback-rationale');
+
+            feedbackContainer.classList.remove('hidden');
+            feedbackContainer.classList.add('fade-in');
+            
+            if (isCorrect) {
+                feedbackTitle.innerText = "答對了！✨";
+                feedbackTitle.className = "font-bold mb-1 text-green-600";
+                feedbackContainer.className = "mt-6 p-4 rounded-lg border-l-4 border-green-500 bg-green-50";
+            } else {
+                feedbackTitle.innerText = "答錯了... 💀";
+                feedbackTitle.className = "font-bold mb-1 text-red-600";
+                feedbackContainer.className = "mt-6 p-4 rounded-lg border-l-4 border-red-500 bg-red-50";
+            }
+            feedbackRationale.innerText = question.options[index].rationale || question.options.find(o => o.isCorrect).rationale;
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `${score} / ${quizData.length}`;
+            
+            let message = "";
+            const ratio = score / quizData.length;
+            if (ratio === 1) message = "天啊！你根本是群組的監視器吧？完美大勝！Slay！";
+            else if (ratio >= 0.8) message = "超強！你對大家的一舉一動瞭若指掌，不愧是核心成員！";
+            else if (ratio >= 0.5) message = "及格了！雖然有些細節忘了，但基本的雷西斯特精神還在。";
+            else message = "看來你太少參與呻吟了，快去翻翻聊天紀錄補課！";
+            
+            document.getElementById('result-message').innerText = message;
+        }
+    </script>
+</body>
+</html>
